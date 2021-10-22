@@ -201,6 +201,7 @@ int main(int argc, char** argv) {
 
         delete[] points;
 
+        cout << "Paradigm: master-workers" << endl;
         cout << "Processors: " << arguments.size << endl;
         cout << "Eps: " << arguments.eps << endl;
         cout << "Points per process: " << arguments.points << endl;
