@@ -24,10 +24,11 @@ struct Arguments {
 };
 
 void Help() {
-    cout << "Usage: ./integrate [-e eps] [-n points] [-xmin xmin] [-xmax xmax] [-ymin ymin] [-ymax ymax] [-zmin zmin] [-zmax zmax]" << endl;
+    cout << "Usage: ./integrate [-e eps] [-n points] [-d] [-xmin xmin] [-xmax xmax] [-ymin ymin] [-ymax ymax] [-zmin zmin] [-zmax zmax]" << endl;
     cout << "Arguments:" << endl;
     cout << "  -e    - required accuracy, default - 1e-3" << endl;
     cout << "  -n    - number of point for process, default - 1000" << endl;
+    cout << "  -d    - debug mode, not used by default" << endl;
     cout << "  -xmin - left bound on x axis, default - 0" << endl;
     cout << "  -xmax - right bound on x axis, default - 1" << endl;
     cout << "  -ymin - left bound on y axis, default - 0" << endl;
@@ -55,10 +56,10 @@ Arguments ParseArguments(int argc, char **argv) {
     arguments.debug = false;
 
     for (int i = 1; i < argc; i += 2) {
-        if (!strcmp(argv[i], "-e")) {
+        if (!strcmp(argv[i], "-e") || !strcmp(argv[i], "--eps")) {
             arguments.eps = atof(argv[i + 1]);
         }
-        else if (!strcmp(argv[i], "-n")) {
+        else if (!strcmp(argv[i], "-n") || !strcmp(argv[i], "--points")) {
             arguments.points = atoi(argv[i + 1]);
         }
         else if (!strcmp(argv[i], "-xmin")) {
@@ -172,7 +173,9 @@ int main(int argc, char** argv) {
         double integrate = 0;
         double totalSum = 0;
 
-        for (int loop = 0; needAnother; loop++) {
+        int loops = 0;
+
+        while (needAnother) {
             for (int i = arguments.points; i < totalPoints * 3; i += 3) {
                 points[i] = Generate(arguments.xmin, arguments.xmax);
                 points[i + 1] = Generate(arguments.ymin, arguments.ymax);
@@ -184,11 +187,12 @@ int main(int argc, char** argv) {
             MPI_Scatter(points, arguments.points * 3, MPI_DOUBLE, localPoints, arguments.points * 3, MPI_DOUBLE, master, MPI_COMM_WORLD);
             MPI_Reduce(&localSum, &sum, 1, MPI_DOUBLE, MPI_SUM, master, MPI_COMM_WORLD);
 
+            loops++;
             totalSum += sum / (arguments.size - 1);
-            integrate = totalSum * arguments.volume / (loop + 1);
+            integrate = totalSum * arguments.volume / loops;
 
             if (arguments.debug) {
-                cout << "Loop " << loop << ": " << integrate << " (accurate: " << accurate << ", defference: " << fabs(accurate - integrate) << ")" << endl;
+                cout << "Loop " << loops << ": " << integrate << " (accurate: " << accurate << ", defference: " << fabs(accurate - integrate) << ")" << endl;
             }
 
             needAnother = fabs(integrate - accurate) > arguments.eps;
@@ -202,8 +206,11 @@ int main(int argc, char** argv) {
         cout << "Points per process: " << arguments.points << endl;
         cout << "Dimensions: [" << arguments.xmin << ", " << arguments.xmax << "] x [" << arguments.ymin << ", " << arguments.ymax << "] x [" << arguments.zmin << ", " << arguments.zmax << "]" << endl;
         cout << "Volume: " << arguments.volume << endl;
+        cout << "Loops: " << loops << endl;
+        cout << "Total number of points: " << (totalPoints * loops) << endl;
         cout << "Target integrate value: " << accurate << endl;
         cout << "Calculated integrate value: " << integrate << endl;
+        cout << "Error: " << fabs(integrate - accurate) << endl;
     }
     else {
         while (needAnother) {
