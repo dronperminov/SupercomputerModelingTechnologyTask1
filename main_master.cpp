@@ -1,123 +1,10 @@
 #include <iostream>
 #include <iomanip>
-#include <cstring>
 #include <cmath>
 #include <mpi.h>
+#include "ArgumentParser.hpp"
 
 using namespace std;
-
-struct Arguments {
-    double eps; // точность
-    int points; // количество точек для каждого процесса
-    int size; // количество процессов
-    int rank; // номер процесса
-    bool debug; // отладка
-
-    double xmin;
-    double xmax;
-    double ymin;
-    double ymax;
-    double zmin;
-    double zmax;
-
-    double volume; // объём области
-};
-
-void Help() {
-    cout << "Usage: ./integrate [-e eps] [-n points] [-d] [-xmin xmin] [-xmax xmax] [-ymin ymin] [-ymax ymax] [-zmin zmin] [-zmax zmax]" << endl;
-    cout << "Arguments:" << endl;
-    cout << "  -e    - required accuracy, default - 1e-3" << endl;
-    cout << "  -n    - number of point for process, default - 1000" << endl;
-    cout << "  -d    - debug mode, not used by default" << endl;
-    cout << "  -xmin - left bound on x axis, default - 0" << endl;
-    cout << "  -xmax - right bound on x axis, default - 1" << endl;
-    cout << "  -ymin - left bound on y axis, default - 0" << endl;
-    cout << "  -ymax - right bound on y axis, default - 1" << endl;
-    cout << "  -zmin - left bound on z axis, default - 0" << endl;
-    cout << "  -zmax - right bound on z axis, default - 1" << endl;
-}
-
-// TODO: normal parsing of arguments
-Arguments ParseArguments(int argc, char **argv) {
-    Arguments arguments;
-
-    arguments.eps = 1e-3;
-    arguments.points = 1000;
-
-    arguments.xmin = 0;
-    arguments.xmax = 1;
-
-    arguments.ymin = 0;
-    arguments.ymax = 1;
-
-    arguments.zmin = 0;
-    arguments.zmax = 1;
-
-    arguments.debug = false;
-
-    for (int i = 1; i < argc; i += 2) {
-        if (!strcmp(argv[i], "-e") || !strcmp(argv[i], "--eps")) {
-            arguments.eps = atof(argv[i + 1]);
-        }
-        else if (!strcmp(argv[i], "-n") || !strcmp(argv[i], "--points")) {
-            arguments.points = atoi(argv[i + 1]);
-        }
-        else if (!strcmp(argv[i], "-xmin")) {
-            arguments.xmin = atof(argv[i + 1]);
-        }
-        else if (!strcmp(argv[i], "-xmax")) {
-            arguments.xmax = atof(argv[i + 1]);
-        }
-        else if (!strcmp(argv[i], "-ymin")) {
-            arguments.ymin = atof(argv[i + 1]);
-        }
-        else if (!strcmp(argv[i], "-ymax")) {
-            arguments.ymax = atof(argv[i + 1]);
-        }
-        else if (!strcmp(argv[i], "-zmin")) {
-            arguments.zmin = atof(argv[i + 1]);
-        }
-        else if (!strcmp(argv[i], "-zmax")) {
-            arguments.zmax = atof(argv[i + 1]);
-        }
-        else if (!strcmp(argv[i], "-d") || !strcmp(argv[i], "--debug")) {
-            arguments.debug = true;
-            i--;
-        }
-        else {
-            throw "Unknown argument";
-        }
-    }
-
-    if (arguments.eps < 1e-6 || arguments.eps > 1)
-        throw "Invalid eps value";
-
-    if (arguments.points < 1)
-        throw "Invalid points value";
-
-    if (MPI_Init(NULL, NULL) != MPI_SUCCESS) {
-        MPI_Abort(MPI_COMM_WORLD, -1);
-        throw "MPI_Init failed";
-    }
-
-    if (MPI_Comm_size(MPI_COMM_WORLD, &arguments.size) != MPI_SUCCESS) {
-        MPI_Abort(MPI_COMM_WORLD, -1);
-        throw "MPI_Comm_size failed";
-    }
-
-    if (MPI_Comm_rank(MPI_COMM_WORLD, &arguments.rank) != MPI_SUCCESS) {
-        MPI_Abort(MPI_COMM_WORLD, -1);
-        throw "MPI_Comm_rank failed";
-    }
-
-    double dx = arguments.xmax - arguments.xmin;
-    double dy = arguments.ymax - arguments.ymin;
-    double dz = arguments.zmax - arguments.zmin;
-
-    arguments.volume = dx * dy * dz;
-
-    return arguments;
-}
 
 // интегрируемая функция
 double f(double x, double y, double z) {
@@ -143,8 +30,10 @@ double CalculateSum(int n, double *points) {
 }
 
 int main(int argc, char** argv) {
+    ArgumentParser parser;
+
     if (argc == 2 && (!strcmp(argv[1], "--help") || !strcmp(argv[1], "-h"))) {
-        Help();
+        parser.Help();
         return 0;
     }
 
@@ -154,7 +43,7 @@ int main(int argc, char** argv) {
     Arguments arguments;
 
     try {
-        arguments = ParseArguments(argc, argv);
+        arguments = parser.Parse(argc, argv);
     }
     catch (const char *error) {
         cout << error << endl;
@@ -230,9 +119,9 @@ int main(int argc, char** argv) {
     double delta = endTime - startTime;
     double maxTime, minTime, avgTime;
 
-    MPI_Reduce(&delta, &maxTime, 1, MPI_DOUBLE,MPI_MAX, 0, MPI_COMM_WORLD);
-    MPI_Reduce(&delta, &minTime, 1, MPI_DOUBLE, MPI_MIN, 0,MPI_COMM_WORLD);
-    MPI_Reduce(&delta, &avgTime, 1, MPI_DOUBLE, MPI_SUM, 0,MPI_COMM_WORLD);
+    MPI_Reduce(&delta, &maxTime, 1, MPI_DOUBLE, MPI_MAX, 0, MPI_COMM_WORLD);
+    MPI_Reduce(&delta, &minTime, 1, MPI_DOUBLE, MPI_MIN, 0, MPI_COMM_WORLD);
+    MPI_Reduce(&delta, &avgTime, 1, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);
 
     if (arguments.rank == master) {
         cout << "Max time: " << maxTime << endl;
