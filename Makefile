@@ -1,54 +1,62 @@
 COMPILER=mpixlC
-FLAGS=-O3 -pedantic -Wall -std=c++11
+FLAGS=-O3 -std=c++11
 EPS=1e-6
 POINTS=1000
 PROCESSORS=16
-MINUTES=05
+MINUTES=10
+VOLUME_ARGS=-xmin 0 -xmax 1 -ymin 0 -ymax 1 -zmin 0 -zmax 1
 
-all: main
+all: normal master
 
-# main: main_normal.cpp
-# 	$(COMPILER) $(FLAGS) main_normal.cpp -o main
+normal: main_normal.cpp
+	$(COMPILER) $(FLAGS) main_normal.cpp -o normal
 
-main: main_master.cpp
-	$(COMPILER) $(FLAGS) main_master.cpp -o main
+master: main_master.cpp
+	$(COMPILER) $(FLAGS) main_master.cpp -o master
 
-submit-polus: main
-	rm -rf output_$(PROCESSORS).txt error_$(PROCESSORS).txt
-	mpisubmit.pl -p $(PROCESSORS) -w 00:$(MINUTES) --stdout output_$(PROCESSORS).txt --stderr error_$(PROCESSORS).txt ./main -- -e $(EPS) -n $(POINTS) -xmin 0 -xmax 1 -ymin 0 -ymax 1 -zmin 0 -zmax 1
+test-normal: test_normal.cpp
+	$(COMPILER) $(FLAGS) test_normal.cpp -o test_normal
 
-submit-bluegene: main
-	rm -rf output_$(PROCESSORS).txt error_$(PROCESSORS).txt
-	mpisubmit.bg -n $(PROCESSORS) -w 00:$(MINUTES):00 --stdout output_$(PROCESSORS).txt --stderr error_$(PROCESSORS).txt ./main -- -e $(EPS) -n $(POINTS) -xmin 0 -xmax 1 -ymin 0 -ymax 1 -zmin 0 -zmax 1
+test-master: test_master.cpp
+	$(COMPILER) $(FLAGS) test_master.cpp -o test_master
 
-submit-polus-all: main
-	mpisubmit.pl -p 2 -w 00:$(MINUTES) --stdout /dev/null --stderr /dev/null ./main -- -e 3e-5 -n 1000 -xmin 0 -xmax 1 -ymin 0 -ymax 1 -zmin 0 -zmax 1
-	mpisubmit.pl -p 4 -w 00:$(MINUTES) --stdout /dev/null --stderr /dev/null ./main -- -e 3e-5 -n 1000 -xmin 0 -xmax 1 -ymin 0 -ymax 1 -zmin 0 -zmax 1
-	mpisubmit.pl -p 16 -w 00:$(MINUTES) --stdout /dev/null --stderr /dev/null ./main -- -e 3e-5 -n 1000 -xmin 0 -xmax 1 -ymin 0 -ymax 1 -zmin 0 -zmax 1
-	mpisubmit.pl -p 64 -w 00:$(MINUTES) --stdout /dev/null --stderr /dev/null ./main -- -e 3e-5 -n 1000 -xmin 0 -xmax 1 -ymin 0 -ymax 1 -zmin 0 -zmax 1
+submit-polus: submit-polus-normal submit-polus-master
 
-	mpisubmit.pl -p 2 -w 00:$(MINUTES) --stdout /dev/null --stderr /dev/null ./main -- -e 5e-6 -n 1000 -xmin 0 -xmax 1 -ymin 0 -ymax 1 -zmin 0 -zmax 1
-	mpisubmit.pl -p 4 -w 00:$(MINUTES) --stdout /dev/null --stderr /dev/null ./main -- -e 5e-6 -n 1000 -xmin 0 -xmax 1 -ymin 0 -ymax 1 -zmin 0 -zmax 1
-	mpisubmit.pl -p 16 -w 00:$(MINUTES) --stdout /dev/null --stderr /dev/null ./main -- -e 5e-6 -n 1000 -xmin 0 -xmax 1 -ymin 0 -ymax 1 -zmin 0 -zmax 1
-	mpisubmit.pl -p 64 -w 00:$(MINUTES) --stdout /dev/null --stderr /dev/null ./main -- -e 5e-6 -n 1000 -xmin 0 -xmax 1 -ymin 0 -ymax 1 -zmin 0 -zmax 1
+submit-polus-normal:
+	mpixlC -O3 -std=c++11 test_normal.cpp -o normal
 
-	mpisubmit.pl -p 2 -w 00:$(MINUTES) --stdout /dev/null --stderr /dev/null ./main -- -e 1.5e-6 -n 1000 -xmin 0 -xmax 1 -ymin 0 -ymax 1 -zmin 0 -zmax 1
-	mpisubmit.pl -p 4 -w 00:$(MINUTES) --stdout /dev/null --stderr /dev/null ./main -- -e 1.5e-6 -n 1000 -xmin 0 -xmax 1 -ymin 0 -ymax 1 -zmin 0 -zmax 1
-	mpisubmit.pl -p 16 -w 00:$(MINUTES) --stdout /dev/null --stderr /dev/null ./main -- -e 1.5e-6 -n 1000 -xmin 0 -xmax 1 -ymin 0 -ymax 1 -zmin 0 -zmax 1
-	mpisubmit.pl -p 64 -w 00:$(MINUTES) --stdout /dev/null --stderr /dev/null ./main -- -e 1.5e-6 -n 1000 -xmin 0 -xmax 1 -ymin 0 -ymax 1 -zmin 0 -zmax 1
+	for eps in 3e-5 5e-6 1.5e-6 ; do \
+		for p in 1 4 16 64 ; do \
+			mpisubmit.pl -p $$p -w 00:$(MINUTES) --stdout /dev/null --stderr /dev/null ./normal -- -e $$eps -n $(POINTS) $(VOLUME_ARGS) ; \
+		done \
+	done
 
-submit-bluegene-all: main
-	mpisubmit.bg -n 2 -w 00:$(MINUTES):00 --stdout /dev/null --stderr /dev/null ./main -- -e 1e-4 -n 1000 -xmin 0 -xmax 1 -ymin 0 -ymax 1 -zmin 0 -zmax 1
-	mpisubmit.bg -n 4 -w 00:$(MINUTES):00 --stdout /dev/null --stderr /dev/null ./main -- -e 1e-4 -n 1000 -xmin 0 -xmax 1 -ymin 0 -ymax 1 -zmin 0 -zmax 1
-	mpisubmit.bg -n 16 -w 00:$(MINUTES):00 --stdout /dev/null --stderr /dev/null ./main -- -e 1e-4 -n 1000 -xmin 0 -xmax 1 -ymin 0 -ymax 1 -zmin 0 -zmax 1
-	mpisubmit.bg -n 64 -w 00:$(MINUTES):00 --stdout /dev/null --stderr /dev/null ./main -- -e 1e-4 -n 1000 -xmin 0 -xmax 1 -ymin 0 -ymax 1 -zmin 0 -zmax 1
+submit-polus-master:
+	mpixlC -O3 -std=c++11 test_master.cpp -o master
 
-	mpisubmit.bg -n 2 -w 00:$(MINUTES):00 --stdout /dev/null --stderr /dev/null ./main -- -e 2e-5 -n 1000 -xmin 0 -xmax 1 -ymin 0 -ymax 1 -zmin 0 -zmax 1
-	mpisubmit.bg -n 4 -w 00:$(MINUTES):00 --stdout /dev/null --stderr /dev/null ./main -- -e 2e-5 -n 1000 -xmin 0 -xmax 1 -ymin 0 -ymax 1 -zmin 0 -zmax 1
-	mpisubmit.bg -n 16 -w 00:$(MINUTES):00 --stdout /dev/null --stderr /dev/null ./main -- -e 2e-5 -n 1000 -xmin 0 -xmax 1 -ymin 0 -ymax 1 -zmin 0 -zmax 1
-	mpisubmit.bg -n 64 -w 00:$(MINUTES):00 --stdout /dev/null --stderr /dev/null ./main -- -e 2e-5 -n 1000 -xmin 0 -xmax 1 -ymin 0 -ymax 1 -zmin 0 -zmax 1
+	for eps in 3e-5 5e-6 1.5e-6 ; do \
+		for p in 2 4 16 64 ; do \
+			mpisubmit.pl -p $$p -w 00:$(MINUTES) --stdout /dev/null --stderr /dev/null ./master -- -e $$eps -n $(POINTS) $(VOLUME_ARGS) ; \
+		done \
+	done
 
-	mpisubmit.bg -n 2 -w 00:$(MINUTES):00 --stdout /dev/null --stderr /dev/null ./main -- -e 8e-6 -n 1000 -xmin 0 -xmax 1 -ymin 0 -ymax 1 -zmin 0 -zmax 1
-	mpisubmit.bg -n 4 -w 00:$(MINUTES):00 --stdout /dev/null --stderr /dev/null ./main -- -e 8e-6 -n 1000 -xmin 0 -xmax 1 -ymin 0 -ymax 1 -zmin 0 -zmax 1
-	mpisubmit.bg -n 16 -w 00:$(MINUTES):00 --stdout /dev/null --stderr /dev/null ./main -- -e 8e-6 -n 1000 -xmin 0 -xmax 1 -ymin 0 -ymax 1 -zmin 0 -zmax 1
-	mpisubmit.bg -n 64 -w 00:$(MINUTES):00 --stdout /dev/null --stderr /dev/null ./main -- -e 8e-6 -n 1000 -xmin 0 -xmax 1 -ymin 0 -ymax 1 -zmin 0 -zmax 1
+
+submit-bluegene: submit-bluegene-normal submit-bluegene-master
+
+submit-bluegene-normal:
+	mpixlcxx -O3 test_normal.cpp -o normal
+
+	for eps in 1e-4 2e-5 8e-6 ; do \
+		for p in 1 4 16 64 ; do \
+			mpisubmit.bg -n $$p -w 00:$(MINUTES):00 --stdout /dev/null --stderr /dev/null ./normal -- -e $$eps -n $(POINTS) $(VOLUME_ARGS) ; \
+		done \
+	done
+
+submit-bluegene-master:
+	mpixlcxx -O3 test_master.cpp -o normal
+
+	for eps in 1e-4 2e-5 8e-6 ; do \
+		for p in 2 4 16 64 ; do \
+			mpisubmit.bg -n $$p -w 00:$(MINUTES):00 --stdout /dev/null --stderr /dev/null ./master -- -e $$eps -n $(POINTS) $(VOLUME_ARGS) ; \
+		done \
+	done
