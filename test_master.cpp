@@ -112,7 +112,7 @@ int main(int argc, char** argv) {
 
     if (arguments.rank == master) {
         ofstream fout("master.txt", ios::app);
-        fout << "| " << setw(12) << arguments.eps << " | " << setw(19) << arguments.size << " | " << setw(26) << (avgTime / arguments.size / iters) << " |           | " << setw(11) << (error / iters) << " |" << endl;
+        fout << "| " << setw(12) << arguments.eps << " | " << setw(19) << arguments.size << " | " << setw(26) << (maxTime / iters) << " |           | " << setw(11) << (error / iters) << " |" << endl;
         fout.close();
     }
 
