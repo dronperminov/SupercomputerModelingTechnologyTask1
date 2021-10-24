@@ -1,4 +1,5 @@
 #include <iostream>
+#include <fstream>
 #include <iomanip>
 #include <cmath>
 #include <mpi.h>
@@ -50,6 +51,9 @@ int main(int argc, char** argv) {
         return -1;
     }
 
+    ofstream fout(arguments.output ? arguments.output : "output.txt");
+    fout.close();
+
     srand(arguments.rank);
 
     double startTime = MPI_Wtime();
@@ -79,7 +83,9 @@ int main(int argc, char** argv) {
             integrate = totalSum * arguments.volume / loops;
 
             if (arguments.debug) {
-                cout << "Loop " << loops << ": " << integrate << " (accurate: " << accurate << ", defference: " << fabs(accurate - integrate) << ")" << endl;
+                ofstream fout(arguments.output ? arguments.output : "output.txt", ios::app);                
+                fout << "Loop " << loops << ": " << integrate << " (accurate: " << accurate << ", defference: " << fabs(accurate - integrate) << ")" << endl;
+                fout.close();
             }
 
             needAnother = fabs(integrate - accurate) > arguments.eps;
@@ -90,20 +96,6 @@ int main(int argc, char** argv) {
 
     delete[] points;
 
-    if (arguments.rank == master) {
-        cout << "Paradigm: usual" << endl;
-        cout << "Processors: " << arguments.size << endl;
-        cout << "Eps: " << arguments.eps << endl;
-        cout << "Points per process: " << arguments.points << endl;
-        cout << "Dimensions: [" << arguments.xmin << ", " << arguments.xmax << "] x [" << arguments.ymin << ", " << arguments.ymax << "] x [" << arguments.zmin << ", " << arguments.zmax << "]" << endl;
-        cout << "Volume: " << arguments.volume << endl;
-        cout << "Loops: " << loops << endl;
-        cout << "Total number of points: " << (arguments.points * arguments.size * loops) << endl;
-        cout << "Target integrate value: " << accurate << endl;
-        cout << "Calculated integrate value: " << integrate << endl;
-        cout << "Error: " << fabs(integrate - accurate) << endl;
-    }
-
     double endTime = MPI_Wtime();
     double delta = endTime - startTime;
     double maxTime, minTime, avgTime;
@@ -113,9 +105,24 @@ int main(int argc, char** argv) {
     MPI_Reduce(&delta, &avgTime, 1, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);
 
     if (arguments.rank == master) {
-        cout << "Max time: " << maxTime << endl;
-        cout << "Min time: " << minTime << endl;
-        cout << "Average time: " << avgTime / arguments.size << endl;
+        ofstream fout(arguments.output ? arguments.output : "output.txt", ios::app);
+        fout << "Paradigm: usual" << endl;
+        fout << "Processors: " << arguments.size << endl;
+        fout << "Eps: " << arguments.eps << endl;
+        fout << "Points per process: " << arguments.points << endl;
+        fout << "Dimensions: [" << arguments.xmin << ", " << arguments.xmax << "] x [" << arguments.ymin << ", " << arguments.ymax << "] x [" << arguments.zmin << ", " << arguments.zmax << "]" << endl;
+        fout << "Volume: " << arguments.volume << endl;
+        fout << "Loops: " << loops << endl;
+        fout << "Total number of points: " << (arguments.points * arguments.size * loops) << endl;
+        fout << "Target integrate value: " << accurate << endl;
+        fout << "Calculated integrate value: " << integrate << endl;
+        fout << "Error: " << fabs(integrate - accurate) << endl;
+
+        fout << "Max time: " << maxTime << endl;
+        fout << "Min time: " << minTime << endl;
+        fout << "Average time: " << avgTime / arguments.size << endl;
+
+        fout.close();
     }
 
     MPI_Finalize();

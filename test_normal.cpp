@@ -100,7 +100,7 @@ int main(int argc, char** argv) {
     MPI_Reduce(&delta, &avgTime, 1, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);
 
     if (arguments.rank == master) {
-        ofstream fout("normal.txt", ios::app);
+        ofstream fout(arguments.output ? arguments.output : "normal.txt", ios::app);
         fout << "| " << setw(12) << arguments.eps << " | " << setw(19) << arguments.size << " | " << setw(26) << (maxTime / iters) << " |           | " << setw(11) << (error / iters) << " |" << endl;
         fout.close();
     }

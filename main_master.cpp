@@ -1,4 +1,5 @@
 #include <iostream>
+#include <fstream>
 #include <iomanip>
 #include <cmath>
 #include <mpi.h>
@@ -64,6 +65,8 @@ int main(int argc, char** argv) {
 
         int loops = 0;
 
+        ofstream fout(arguments.output ? arguments.output : "output.txt");
+
         while (needAnother) {
             for (int i = arguments.points; i < totalPoints * 3; i += 3) {
                 points[i] = Generate(arguments.xmin, arguments.xmax);
@@ -81,7 +84,7 @@ int main(int argc, char** argv) {
             integrate = totalSum * arguments.volume / loops;
 
             if (arguments.debug) {
-                cout << "Loop " << loops << ": " << integrate << " (accurate: " << accurate << ", defference: " << fabs(accurate - integrate) << ")" << endl;
+                fout << "Loop " << loops << ": " << integrate << " (accurate: " << accurate << ", defference: " << fabs(accurate - integrate) << ")" << endl;
             }
 
             needAnother = fabs(integrate - accurate) > arguments.eps;
@@ -90,17 +93,18 @@ int main(int argc, char** argv) {
 
         delete[] points;
 
-        cout << "Paradigm: master-workers" << endl;
-        cout << "Processors: " << arguments.size << endl;
-        cout << "Eps: " << arguments.eps << endl;
-        cout << "Points per process: " << arguments.points << endl;
-        cout << "Dimensions: [" << arguments.xmin << ", " << arguments.xmax << "] x [" << arguments.ymin << ", " << arguments.ymax << "] x [" << arguments.zmin << ", " << arguments.zmax << "]" << endl;
-        cout << "Volume: " << arguments.volume << endl;
-        cout << "Loops: " << loops << endl;
-        cout << "Total number of points: " << (totalPoints * loops) << endl;
-        cout << "Target integrate value: " << accurate << endl;
-        cout << "Calculated integrate value: " << integrate << endl;
-        cout << "Error: " << fabs(integrate - accurate) << endl;
+        fout << "Paradigm: master-workers" << endl;
+        fout << "Processors: " << arguments.size << endl;
+        fout << "Eps: " << arguments.eps << endl;
+        fout << "Points per process: " << arguments.points << endl;
+        fout << "Dimensions: [" << arguments.xmin << ", " << arguments.xmax << "] x [" << arguments.ymin << ", " << arguments.ymax << "] x [" << arguments.zmin << ", " << arguments.zmax << "]" << endl;
+        fout << "Volume: " << arguments.volume << endl;
+        fout << "Loops: " << loops << endl;
+        fout << "Total number of points: " << (totalPoints * loops) << endl;
+        fout << "Target integrate value: " << accurate << endl;
+        fout << "Calculated integrate value: " << integrate << endl;
+        fout << "Error: " << fabs(integrate - accurate) << endl;
+        fout.close();
     }
     else {
         while (needAnother) {
@@ -124,9 +128,11 @@ int main(int argc, char** argv) {
     MPI_Reduce(&delta, &avgTime, 1, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);
 
     if (arguments.rank == master) {
-        cout << "Max time: " << maxTime << endl;
-        cout << "Min time: " << minTime << endl;
-        cout << "Average time: " << avgTime / arguments.size << endl;
+        ofstream fout(arguments.output ? arguments.output : "output.txt", ios::app);
+        fout << "Max time: " << maxTime << endl;
+        fout << "Min time: " << minTime << endl;
+        fout << "Average time: " << avgTime / arguments.size << endl;
+        fout.close();
     }
 
     MPI_Finalize();

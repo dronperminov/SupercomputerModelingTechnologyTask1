@@ -16,6 +16,7 @@ struct Arguments {
     double zmin;
     double zmax;
 
+    char *output; // путь к выходному файлу
     double volume; // объём области
 };
 
@@ -26,11 +27,12 @@ public:
 };
 
 void ArgumentParser::Help() const {
-    std::cout << "Usage: ./integrate [-e eps] [-n points] [-d] [-xmin xmin] [-xmax xmax] [-ymin ymin] [-ymax ymax] [-zmin zmin] [-zmax zmax]" << std::endl;
+    std::cout << "Usage: ./integrate [-e eps] [-n points] [-o path] [-d] [-xmin xmin] [-xmax xmax] [-ymin ymin] [-ymax ymax] [-zmin zmin] [-zmax zmax]" << std::endl;
     std::cout << "Arguments:" << std::endl;
     std::cout << "  -e    - required accuracy, default - 1e-3" << std::endl;
     std::cout << "  -n    - number of point for process, default - 1000" << std::endl;
     std::cout << "  -d    - debug mode, not used by default" << std::endl;
+    std::cout << "  -o    - path to print all stdout, \"output.txt\" by default" << std::endl;
     std::cout << "  -xmin - left bound on x axis, default - 0" << std::endl;
     std::cout << "  -xmax - right bound on x axis, default - 1" << std::endl;
     std::cout << "  -ymin - left bound on y axis, default - 0" << std::endl;
@@ -55,6 +57,7 @@ Arguments ArgumentParser::Parse(int argc, char **argv) const {
     arguments.zmax = 1;
 
     arguments.debug = false;
+    arguments.output = NULL;
 
     for (int i = 1; i < argc; i += 2) {
         if (!strcmp(argv[i], "-e") || !strcmp(argv[i], "--eps")) {
@@ -62,6 +65,9 @@ Arguments ArgumentParser::Parse(int argc, char **argv) const {
         }
         else if (!strcmp(argv[i], "-n") || !strcmp(argv[i], "--points")) {
             arguments.points = atoi(argv[i + 1]);
+        }
+        else if (!strcmp(argv[i], "-o") || !strcmp(argv[i], "--output")) {
+            arguments.output = argv[i + 1];
         }
         else if (!strcmp(argv[i], "-xmin")) {
             arguments.xmin = atof(argv[i + 1]);
