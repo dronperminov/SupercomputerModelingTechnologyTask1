@@ -24,6 +24,12 @@
 
 Полученное значение интеграла сравнивается с заранее заданным эталоном и в случае достижения требуемой точности процессам рабочим передаётся флаг, сигнализирующий об окончании вычислений и завершении работы. В противном случае генерируется новая порция точек и процесс вычисления повторяется.
 
+### Используемые параметры интегрирования в реализации
+
+В качестве интегрирующей функции используется f(x) = xy²z³. В качестве области интегрирования берётся область, ограниченная поверхностями z = xy, y = x, x = 1, z = 0. Область представлена на рисунке:
+
+<img src="https://github.com/dronperminov/SupercomputerModelingTechnologyTask1/blob/master/plots/surface.png" alt="Область интегрирования">
+
 ## Сборка программы
 Сборка осуществляется путём выполнения команды `make` из директории с программой. Для отправки на учебные кластеры используются цели `submit-polus` и `submit-bluegene`:
 
@@ -190,3 +196,41 @@ Average time: 0.0162845
 |       1.5e-6 |                   4 |                   0.424769 |     1.808 | 7.19423e-7 |
 |       1.5e-6 |                  16 |                   0.053645 |    14.318 | 9.54345e-7 |
 |       1.5e-6 |                  64 |                   0.061933 |    12.402 | 9.14685e-7 |
+
+
+## Время работы программ на разных кластерах
+
+### Парадигма "мастер-рабочий"
+<table border="0">
+  <tr>
+    <td><img src="https://github.com/dronperminov/SupercomputerModelingTechnologyTask1/blob/master/plots/bluegene_master_workers.png"></td>
+    <td><img src="https://github.com/dronperminov/SupercomputerModelingTechnologyTask1/blob/master/plots/polus_master_workers.png"></td>
+  </tr>
+</table>
+
+### Обычная схема
+<table>
+  <tr>
+    <td><img src="https://github.com/dronperminov/SupercomputerModelingTechnologyTask1/blob/master/plots/bluegene_usual.png"></td>
+    <td><img src="https://github.com/dronperminov/SupercomputerModelingTechnologyTask1/blob/master/plots/polus_usual.png"></td>
+  </tr>
+</table>
+
+
+## Ускорение программ на разных кластерах
+
+### Парадигма "мастер-рабочий"
+<table border="0">
+  <tr>
+    <td><img src="https://github.com/dronperminov/SupercomputerModelingTechnologyTask1/blob/master/plots/bluegene_master_workers_acceleration.png"></td>
+    <td><img src="https://github.com/dronperminov/SupercomputerModelingTechnologyTask1/blob/master/plots/polus_master_workers_acceleration.png"></td>
+  </tr>
+</table>
+
+### Обычная схема
+<table>
+  <tr>
+    <td><img src="https://github.com/dronperminov/SupercomputerModelingTechnologyTask1/blob/master/plots/bluegene_usual_acceleration.png"></td>
+    <td><img src="https://github.com/dronperminov/SupercomputerModelingTechnologyTask1/blob/master/plots/polus_usual_acceleration.png"></td>
+  </tr>
+</table>
