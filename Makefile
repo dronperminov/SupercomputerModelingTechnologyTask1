@@ -27,7 +27,7 @@ submit-polus-normal:
 
 	for eps in 3e-5 5e-6 1.5e-6 ; do \
 		for p in 1 4 16 64 ; do \
-			mpisubmit.pl -p $$p -w 00:$(MINUTES) --stdout /dev/null --stderr /dev/null ./normal -- -e $$eps -n $(POINTS) $(VOLUME_ARGS) ; \
+			mpisubmit.pl -p $$p -w 00:$(MINUTES) --stdout /dev/null --stderr /dev/null ./normal -- -e $$eps -n $(POINTS) -o normal_$(POINTS).txt $(VOLUME_ARGS) ; \
 		done \
 	done
 
@@ -36,7 +36,7 @@ submit-polus-master:
 
 	for eps in 3e-5 5e-6 1.5e-6 ; do \
 		for p in 2 4 16 64 ; do \
-			mpisubmit.pl -p $$p -w 00:$(MINUTES) --stdout /dev/null --stderr /dev/null ./master -- -e $$eps -n $(POINTS) $(VOLUME_ARGS) ; \
+			mpisubmit.pl -p $$p -w 00:$(MINUTES) --stdout /dev/null --stderr /dev/null ./master -- -e $$eps -n $(POINTS) -o master_$(POINTS).txt $(VOLUME_ARGS) ; \
 		done \
 	done
 
@@ -48,15 +48,15 @@ submit-bluegene-normal:
 
 	for eps in 1e-4 2e-5 8e-6 ; do \
 		for p in 1 4 16 64 ; do \
-			mpisubmit.bg -n $$p -w 00:$(MINUTES):00 --stdout /dev/null --stderr /dev/null ./normal -- -e $$eps -n $(POINTS) $(VOLUME_ARGS) ; \
+			mpisubmit.bg -n $$p -w 00:$(MINUTES):00 --stdout /dev/null --stderr /dev/null ./normal -- -e $$eps -n $(POINTS) -o normal_$(POINTS).txt $(VOLUME_ARGS) ; \
 		done \
 	done
 
 submit-bluegene-master:
-	mpixlcxx -O3 test_master.cpp -o normal
+	mpixlcxx -O3 test_master.cpp -o master
 
 	for eps in 1e-4 2e-5 8e-6 ; do \
 		for p in 2 4 16 64 ; do \
-			mpisubmit.bg -n $$p -w 00:$(MINUTES):00 --stdout /dev/null --stderr /dev/null ./master -- -e $$eps -n $(POINTS) $(VOLUME_ARGS) ; \
+			mpisubmit.bg -n $$p -w 00:$(MINUTES):00 --stdout /dev/null --stderr /dev/null ./master -- -e $$eps -n $(POINTS) -o master_$(POINTS).txt $(VOLUME_ARGS) ; \
 		done \
 	done
