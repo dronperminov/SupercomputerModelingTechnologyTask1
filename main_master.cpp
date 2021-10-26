@@ -100,7 +100,7 @@ int main(int argc, char** argv) {
         fout << "Dimensions: [" << arguments.xmin << ", " << arguments.xmax << "] x [" << arguments.ymin << ", " << arguments.ymax << "] x [" << arguments.zmin << ", " << arguments.zmax << "]" << endl;
         fout << "Volume: " << arguments.volume << endl;
         fout << "Loops: " << loops << endl;
-        fout << "Total number of points: " << (totalPoints * loops) << endl;
+        fout << "Total number of points: " << ((totalPoints - arguments.points) * loops) << endl;
         fout << "Target integrate value: " << accurate << endl;
         fout << "Calculated integrate value: " << integrate << endl;
         fout << "Error: " << fabs(integrate - accurate) << endl;
