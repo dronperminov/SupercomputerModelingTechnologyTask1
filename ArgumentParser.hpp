@@ -1,5 +1,6 @@
 #pragma once
 
+#include <iostream>
 #include <cstring>
 
 struct Arguments {
@@ -38,31 +39,40 @@ bool ArgumentParser::IsInteger(const char *s) const {
 
 bool ArgumentParser::IsReal(const char *s) const {
     int points = 0; // количество точек
-    bool exponent = false; // была ли экспонента
+    int exponent = -1; // была ли экспонента
+    int sign = -1;
 
     for (int i = s[0] == '-' ? 1 : 0; s[i]; i++) {
-        if (s[i] == '.' || s[i] == ',') { // если точка
+        if (s[i] == '.') { // если точка
             points++; // увеличиваем счётчик точек
 
-            if (points > 1 || exponent) // если больше одной точки или была экспонента
+            if (points > 1 || exponent > -1) // если больше одной точки или была экспонента
                 return false; // то не вещественное число
         }
         else if (s[i] == 'e') {
-            if (exponent) // если экспонента уже была
+            if (exponent > -1) // если экспонента уже была
                 return false; // то не вещественное число
 
-            exponent = true; // обновляем флаг
+            exponent = i; // обновляем флаг
         }
         else if (s[i] == '-' || s[i] == '+') {
-            if (!exponent || s[i - 1] != 'e') // если не было экспоненты, но знак
+            if (exponent != i - 1) // если не было экспоненты, но знак
                 return false; // то не число
+
+            sign = i;
         }
         else if (s[i] < '0' || s[i] > '9') { // если не цифра
             return false; // то не вещественное число
         }
     }
 
-    return true; // вещественное число
+    if (exponent == -1)
+        return true;
+
+    if (sign == -1)
+        return s[exponent + 1];
+
+    return s[sign + 1];
 }
 
 void ArgumentParser::Help() const {
