@@ -21,10 +21,49 @@ struct Arguments {
 };
 
 class ArgumentParser {
+    bool IsInteger(const char *s) const;
+    bool IsReal(const char *s) const;
 public:
     Arguments Parse(int argc, char **argv) const;
     void Help() const;
 };
+
+bool ArgumentParser::IsInteger(const char *s) const {
+    for (int i = s[0] == '-' ? 1 : 0; s[i]; i++)
+        if (s[i] < '0' || s[i] > '9') // если не цифра
+            return false; // то не целое число
+
+    return true; // целое число
+}
+
+bool ArgumentParser::IsReal(const char *s) const {
+    int points = 0; // количество точек
+    bool exponent = false; // была ли экспонента
+
+    for (int i = s[0] == '-' ? 1 : 0; s[i]; i++) {
+        if (s[i] == '.' || s[i] == ',') { // если точка
+            points++; // увеличиваем счётчик точек
+
+            if (points > 1 || exponent) // если больше одной точки или была экспонента
+                return false; // то не вещественное число
+        }
+        else if (s[i] == 'e') {
+            if (exponent) // если экспонента уже была
+                return false; // то не вещественное число
+
+            exponent = true; // обновляем флаг
+        }
+        else if (s[i] == '-' || s[i] == '+') {
+            if (!exponent || s[i - 1] != 'e') // если не было экспоненты, но знак
+                return false; // то не число
+        }
+        else if (s[i] < '0' || s[i] > '9') { // если не цифра
+            return false; // то не вещественное число
+        }
+    }
+
+    return true; // вещественное число
+}
 
 void ArgumentParser::Help() const {
     std::cout << "Usage: ./integrate [-e eps] [-n points] [-o path] [-d] [-xmin xmin] [-xmax xmax] [-ymin ymin] [-ymax ymax] [-zmin zmin] [-zmax zmax]" << std::endl;
@@ -61,30 +100,81 @@ Arguments ArgumentParser::Parse(int argc, char **argv) const {
 
     for (int i = 1; i < argc; i += 2) {
         if (!strcmp(argv[i], "-e") || !strcmp(argv[i], "--eps")) {
+            if (i >= argc - 1)
+                throw "-e argument value missed";
+
+            if (!IsReal(argv[i + 1]))
+                throw "-e argument value is not real";
+
             arguments.eps = atof(argv[i + 1]);
         }
         else if (!strcmp(argv[i], "-n") || !strcmp(argv[i], "--points")) {
+            if (i >= argc - 1)
+                throw "-n argument value missed";
+
+            if (!IsInteger(argv[i + 1]))
+                throw "-n argument value is not integer";
+
             arguments.points = atoi(argv[i + 1]);
         }
         else if (!strcmp(argv[i], "-o") || !strcmp(argv[i], "--output")) {
+            if (i >= argc - 1)
+                throw "-o argument value missed";
+
             arguments.output = argv[i + 1];
         }
         else if (!strcmp(argv[i], "-xmin")) {
+            if (i >= argc - 1)
+                throw "-xmin argument value missed";
+
+            if (!IsReal(argv[i + 1]))
+                throw "-xmin argument value is not real";
+
             arguments.xmin = atof(argv[i + 1]);
         }
         else if (!strcmp(argv[i], "-xmax")) {
+            if (i >= argc - 1)
+                throw "-xmax argument value missed";
+
+            if (!IsReal(argv[i + 1]))
+                throw "-xmax argument value is not real";
+
             arguments.xmax = atof(argv[i + 1]);
         }
         else if (!strcmp(argv[i], "-ymin")) {
+            if (i >= argc - 1)
+                throw "-ymin argument value missed";
+
+            if (!IsReal(argv[i + 1]))
+                throw "-ymin argument value is not real";
+
             arguments.ymin = atof(argv[i + 1]);
         }
         else if (!strcmp(argv[i], "-ymax")) {
+            if (i >= argc - 1)
+                throw "-ymax argument value missed";
+
+            if (!IsReal(argv[i + 1]))
+                throw "-ymax argument value is not real";
+
             arguments.ymax = atof(argv[i + 1]);
         }
         else if (!strcmp(argv[i], "-zmin")) {
+            if (i >= argc - 1)
+                throw "-zmin argument value missed";
+
+            if (!IsReal(argv[i + 1]))
+                throw "-zmin argument value is not real";
+
             arguments.zmin = atof(argv[i + 1]);
         }
         else if (!strcmp(argv[i], "-zmax")) {
+            if (i >= argc - 1)
+                throw "-zmax argument value missed";
+
+            if (!IsReal(argv[i + 1]))
+                throw "-zmax argument value is not real";
+
             arguments.zmax = atof(argv[i + 1]);
         }
         else if (!strcmp(argv[i], "-d") || !strcmp(argv[i], "--debug")) {
